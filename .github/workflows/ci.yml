@@ -1,0 +1,96 @@
+# ============================================================================
+# CI Pipeline — AI Agent Orchestration Platform
+# ============================================================================
+# This workflow runs on every push and on pull requests targeting develop/main.
+# It ensures code quality via linting and testing, then validates the Docker
+# image builds successfully.
+# ============================================================================
+
+name: CI Pipeline
+
+# ── Triggers ────────────────────────────────────────────────────────────────
+# push:         Runs on every push to any branch
+# pull_request: Runs when a PR is opened/updated against develop or main
+on:
+  push:
+    branches:
+      - "**" # All branches
+  pull_request:
+    branches:
+      - develop
+      - main
+
+# ── Jobs ────────────────────────────────────────────────────────────────────
+jobs:
+  # ╔═══════════════════════════════════════════════════════════════════════╗
+  # ║  Job 1: test-and-lint                                               ║
+  # ║  Installs dependencies, runs flake8 for linting, and pytest for     ║
+  # ║  unit tests (if a tests directory exists).                          ║
+  # ╚═══════════════════════════════════════════════════════════════════════╝
+  test-and-lint:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the Python runtime
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install project dependencies from requirements.txt
+      - name: Install project dependencies
+        run: pip install -r backend/requirements.txt
+
+      # Step 4: Install linting and testing tools
+      - name: Install linting and testing tools
+        run: pip install flake8 pytest
+
+      # Step 5: Run flake8 linter on the backend directory
+      # --max-line-length=120  → allow slightly longer lines for readability
+      # --exclude=venv,__pycache__  → skip virtual env and cached files
+      - name: Run flake8 linting
+        run: flake8 backend/ --max-line-length=120 --exclude=venv,__pycache__
+
+      # Step 6: Run pytest if a tests directory exists, otherwise skip
+      # The || true ensures the step doesn't fail if no tests folder is found
+      - name: Run pytest (if tests exist)
+        run: |
+          if [ -d "backend/tests" ]; then
+            echo "✅ Tests directory found — running pytest..."
+            pytest backend/tests/ -v
+          else
+            echo "⚠️  No tests directory found — skipping pytest."
+          fi
+
+  # ╔═══════════════════════════════════════════════════════════════════════╗
+  # ║  Job 2: docker-build                                                ║
+  # ║  Builds the Docker image to verify the Dockerfile is valid.         ║
+  # ║  Only runs after test-and-lint passes. Does NOT push the image.     ║
+  # ╚═══════════════════════════════════════════════════════════════════════╝
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+
+    # This job depends on test-and-lint — it only runs if linting/tests pass
+    needs: test-and-lint
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Build the Docker image from backend/Dockerfile
+      # --tag gives the image a name for local reference
+      # --file points to the Dockerfile location
+      # The trailing "." is the build context (repo root)
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag ai-agent-platform:${{ github.sha }} \
+            --file backend/Dockerfile \
+            .
