@@ -4,7 +4,11 @@
 
 **A production-grade platform for building, orchestrating, and deploying autonomous AI agents with RAG pipelines, tool integrations, and scalable cloud infrastructure.**
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://python.org)
+[![CI Pipeline](https://github.com/JITHENTHIRIYA/ai-agent-orchestration-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/JITHENTHIRIYA/ai-agent-orchestration-platform/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/JITHENTHIRIYA/ai-agent-orchestration-platform?label=release&logo=github)](https://github.com/JITHENTHIRIYA/ai-agent-orchestration-platform/releases)
+[![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-latest-green?logo=chainlink&logoColor=white)](https://langchain.com)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
