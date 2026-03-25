@@ -1,0 +1,67 @@
+# ============================================================================
+# Release Pipeline — AI Agent Orchestration Platform
+# ============================================================================
+# This workflow runs ONLY when code is pushed to the main branch (i.e. after
+# a production merge).  It reads the version from the VERSION file and creates
+# a GitHub Release with auto-generated release notes.
+# ============================================================================
+
+name: Release
+
+# ── Trigger ─────────────────────────────────────────────────────────────────
+# Only fires on pushes to main (production releases)
+on:
+  push:
+    branches:
+      - main
+
+# ── Permissions ─────────────────────────────────────────────────────────────
+# The workflow needs write access to create releases and tags
+permissions:
+  contents: write
+
+# ── Jobs ────────────────────────────────────────────────────────────────────
+jobs:
+  # ╔═══════════════════════════════════════════════════════════════════════╗
+  # ║  Job: create-release                                                ║
+  # ║  Reads the VERSION file, tags the commit, and publishes a GitHub    ║
+  # ║  Release with auto-generated notes from commit messages.            ║
+  # ╚═══════════════════════════════════════════════════════════════════════╝
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed for release notes generation
+
+      # Step 2: Read the version string from the VERSION file
+      # The version follows Semantic Versioning (semver): MAJOR.MINOR.PATCH
+      #   MAJOR — breaking/incompatible API changes
+      #   MINOR — new features, backwards-compatible
+      #   PATCH — bug fixes, backwards-compatible
+      # The version is exported as an environment variable for later steps
+      - name: Read version from VERSION file
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Releasing version: v$VERSION"
+
+      # Step 3: Create a GitHub Release using the version tag
+      # - Tags the current commit as v{VERSION} (e.g. v0.1.0)
+      # - Auto-generates release notes from commit messages since last release
+      # - Marks as latest release on the repository
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: v${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true # Auto-populate notes from commits
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
