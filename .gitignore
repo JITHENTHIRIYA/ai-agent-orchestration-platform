@@ -25,3 +25,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+
+# pr docs
+pr_release_v*.md
