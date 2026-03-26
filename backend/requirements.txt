@@ -5,3 +5,7 @@ langchain
 langchain-groq
 pinecone-client
 pydantic
+sentence-transformers
+tiktoken
+langchain-pinecone
+langchain-community
