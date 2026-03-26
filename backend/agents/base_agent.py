@@ -30,17 +30,13 @@ This file creates a minimal ReAct agent using:
 import sys
 import os
 
-# ---------------------------------------------------------------------------
-# Ensure the parent directory (backend/) is on sys.path so we can import
-# config.py regardless of where this script is executed from.
-# ---------------------------------------------------------------------------
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))  # noqa: E402
 
-from langchain_groq import ChatGroq
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.tools import tool
-from langchain_core.prompts import PromptTemplate
-from config import settings
+from langchain_groq import ChatGroq  # noqa: E402
+from langchain.agents import AgentExecutor, create_react_agent  # noqa: E402
+from langchain_core.tools import tool  # noqa: E402
+from langchain_core.prompts import PromptTemplate  # noqa: E402
+from config import settings  # noqa: E402
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 1. DEFINE TOOLS
