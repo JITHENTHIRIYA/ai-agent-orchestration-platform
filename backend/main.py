@@ -12,13 +12,33 @@ from agents.base_agent import run_agent
 from agents.rag_agent import run_rag_agent
 from rag.indexer import index_documents_from_folder
 from rag.retriever import retrieve
+import logging
 
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="AntiGravity Backend",
     description="FastAPI backend powering the AntiGravity AI agent platform.",
     version="0.1.0",
 )
+
+
+@app.on_event("startup")
+async def log_environment():
+    """Log environment configuration on startup to verify keys are loaded."""
+    logger.info("🚀 AntiGravity Backend starting up...")
+    logger.info(
+        "GROQ_API_KEY: %s",
+        "✅ set" if settings.GROQ_API_KEY else "❌ missing",
+    )
+    logger.info(
+        "PINECONE_API_KEY: %s",
+        "✅ set" if settings.PINECONE_API_KEY else "❌ missing",
+    )
+    logger.info(
+        "PINECONE_INDEX: %s",
+        settings.PINECONE_INDEX or "❌ missing",
+    )
 
 
 # ─── Request / Response schemas ─────────────────────────────────────────

@@ -26,10 +26,7 @@ class Settings(BaseModel):
     PINECONE_INDEX: str = os.getenv("PINECONE_INDEX", "")
     PINECONE_INDEX_NAME: str = os.getenv("PINECONE_INDEX_NAME", "ai-agent-platform")
     PINECONE_DIMENSION: int = int(os.getenv("PINECONE_DIMENSION", "384"))
-    EMBEDDING_MODEL: str = os.getenv(
-        "EMBEDDING_MODEL",
-        "sentence-transformers/all-MiniLM-L6-v2",
-    )
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
 
 # Singleton settings instance used by the rest of the application
