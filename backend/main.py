@@ -9,6 +9,7 @@ Run with:
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from agents.base_agent import run_agent
+from config import settings
 from agents.rag_agent import run_rag_agent
 from rag.indexer import index_documents_from_folder
 from rag.retriever import retrieve
