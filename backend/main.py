@@ -6,10 +6,12 @@ Run with:
     uvicorn main:app --reload
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from config import settings
 from agents.base_agent import run_agent
+from agents.rag_agent import run_rag_agent
+from rag.indexer import index_documents_from_folder
+from rag.retriever import retrieve
 
 
 app = FastAPI(
@@ -30,6 +32,30 @@ class AgentQueryResponse(BaseModel):
     """Outgoing JSON body returned by the agent query endpoint."""
     query: str
     response: str
+    status: str
+
+
+class RAGIndexRequest(BaseModel):
+    """Incoming JSON body for indexing local documents into Pinecone."""
+    folder_path: str
+
+
+class RAGIndexResponse(BaseModel):
+    """Outgoing JSON body for index trigger results."""
+    status: str
+    message: str
+
+
+class RAGQueryRequest(BaseModel):
+    """Incoming JSON body for RAG agent query endpoint."""
+    query: str
+
+
+class RAGQueryResponse(BaseModel):
+    """Outgoing JSON body returned by the RAG query endpoint."""
+    query: str
+    response: str
+    sources: list[str]
     status: str
 
 
@@ -82,3 +108,97 @@ async def agent_query(request: AgentQueryRequest):
             status_code=500,
             detail=f"Agent execution failed: {str(e)}",
         )
+
+
+# -----------------------------------------------------------------------
+# POST /api/rag/index
+# -----------------------------------------------------------------------
+# Purpose:
+#   Trigger batch indexing of local .txt documents into Pinecone.
+#
+# Request body:
+#   { "folder_path": "data/sample_docs" }
+#
+# Response body:
+#   { "status": "indexed", "message": "X documents indexed" }
+# -----------------------------------------------------------------------
+@app.post("/api/rag/index", response_model=RAGIndexResponse)
+async def rag_index(request: RAGIndexRequest):
+    """
+    Index `.txt` documents from a local folder into the vector database.
+
+    Error handling:
+    - Returns HTTP 400 for invalid folder/input errors.
+    - Returns HTTP 500 for unexpected ingestion failures.
+    """
+    try:
+        summary = index_documents_from_folder(request.folder_path)
+        indexed_docs = summary.get("total_files_indexed", 0)
+        return RAGIndexResponse(
+            status="indexed",
+            message=f"{indexed_docs} documents indexed",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"RAG indexing failed: {str(e)}")
+
+
+# -----------------------------------------------------------------------
+# POST /api/rag/query
+# -----------------------------------------------------------------------
+# Purpose:
+#   Query the RAG-enabled agent which uses retrieval + LLM reasoning.
+#
+# Request body:
+#   { "query": "string" }
+#
+# Response body:
+#   { "query", "response", "sources", "status" }
+# -----------------------------------------------------------------------
+@app.post("/api/rag/query", response_model=RAGQueryResponse)
+async def rag_query(request: RAGQueryRequest):
+    """
+    Run a query through the RAG agent and return grounded response metadata.
+
+    Error handling:
+    - Converts agent-level failures into HTTP 500.
+    - Also guards against malformed internal return payloads.
+    """
+    try:
+        result = run_rag_agent(request.query)
+        return RAGQueryResponse(
+            query=result.get("query", request.query),
+            response=result.get("response", ""),
+            sources=result.get("sources", []),
+            status=result.get("status", "error"),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"RAG query failed: {str(e)}")
+
+
+# -----------------------------------------------------------------------
+# GET /api/rag/retrieve
+# -----------------------------------------------------------------------
+# Purpose:
+#   Debug endpoint to inspect raw retrieval results from Pinecone without
+#   running the full agent. Useful for tuning chunking and relevance quality.
+#
+# Query params:
+#   ?query=string&top_k=5
+# -----------------------------------------------------------------------
+@app.get("/api/rag/retrieve")
+async def rag_retrieve(query: str = Query(...), top_k: int = Query(5, ge=1, le=50)):
+    """
+    Return raw top-k retrieved chunks for a given query.
+
+    Error handling:
+    - Returns HTTP 400 for invalid retrieval arguments.
+    - Returns HTTP 500 for Pinecone/embedding/runtime failures.
+    """
+    try:
+        return retrieve(query=query, top_k=top_k)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {str(e)}")
