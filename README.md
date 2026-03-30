@@ -208,7 +208,7 @@ ai-agent-orchestration-platform/
 
 ## 📄 License
 
-This project is developed as part of a portfolio project by [Jithen Thiriyakathirvel](https://github.com/JITHENTHIRIYA).
+This project is developed as part of a portfolio project by [Jithenthiriya](https://github.com/JITHENTHIRIYA).
 
 ---
 
