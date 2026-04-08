@@ -9,3 +9,13 @@ sentence-transformers
 tiktoken
 langchain-pinecone
 langchain-community
+
+# MCP (Model Context Protocol) — Anthropic's open protocol that lets LLM agents
+# discover and call "tools" (functions) hosted on a separate MCP server.
+# The agent sends JSON-RPC requests; the server replies with structured results.
+mcp
+
+# httpx — async-first HTTP client used by MCP tool implementations to call
+# external APIs (e.g. fetching a web page, hitting a REST endpoint) without
+# blocking the FastAPI event loop.
+httpx
