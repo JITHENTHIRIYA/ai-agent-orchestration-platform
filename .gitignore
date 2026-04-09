@@ -29,3 +29,6 @@ Thumbs.db
 # Temporary PR descriptions
 pr_release_v0.1.0.md
 pr_feat_api.md
+RELEASE_v0.2.0.md
+
+.claude/
